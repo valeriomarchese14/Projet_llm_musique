@@ -2,8 +2,8 @@ import miditoolkit
 import os
 from tqdm import tqdm
 
-dossier_entree = "Projet_llm_musique/GrandMidiPiano"
-dossier_sortie = "Projet_llm_musique/dataset_tokens"
+dossier_entree = "Projet_llm_musique/GrandMidiPiano/test"
+dossier_sortie = "Projet_llm_musique/dataset_tokens2"
 
 os.makedirs(dossier_sortie, exist_ok=True)
 fichiers_midi = [f for f in os.listdir(dossier_entree) if f.endswith(('.mid', '.midi'))]
@@ -20,10 +20,15 @@ for nom_fichier in tqdm(fichiers_midi, desc="Tokenisation"):
         toutes_les_notes.sort(key=lambda x: x.start)
         
         tokens = []
+        last_start = 0  
+
         for note in toutes_les_notes:
-            tokens.append(f"POSITION_{note.start}")
+            delta = note.start - last_start
+            tokens.append(f"TIME_SHIFT_{delta}")
+            last_start = note.start 
+
             tokens.append(f"NOTE_ON_{note.pitch}")
-            tokens.append(f"DURATION_{note.end - note.start}")
+            tokens.append(f"DURATION_{note.end - note.start}\n")
             
 
         nom_sortie = os.path.splitext(nom_fichier)[0] + ".txt"
