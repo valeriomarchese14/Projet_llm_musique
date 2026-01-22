@@ -28,7 +28,7 @@ for nom_fichier in tqdm(fichiers_midi, desc="Tokenisation"):
             last_start = note.start 
 
             tokens.append(f"NOTE_ON_{note.pitch}")
-            tokens.append(f"DURATION/10_{(note.end - note.start)//10}\n")
+            tokens.append(f"DURATION/10_{(note.end - note.start)//10}")
             
 
         nom_sortie = os.path.splitext(nom_fichier)[0] + ".txt"
@@ -39,4 +39,3 @@ for nom_fichier in tqdm(fichiers_midi, desc="Tokenisation"):
             
     except Exception as e:
         print(f"Erreur sur le fichier {nom_fichier}: {e}")
-
