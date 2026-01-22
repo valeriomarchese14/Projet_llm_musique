@@ -2,7 +2,7 @@ import miditoolkit
 import os
 from tqdm import tqdm
 
-dossier_entree = "Projet_llm_musique/GrandMidiPiano/test"
+dossier_entree = "Projet_llm_musique/GrandMidiPiano"
 dossier_sortie = "Projet_llm_musique/dataset_tokens2"
 
 os.makedirs(dossier_sortie, exist_ok=True)
