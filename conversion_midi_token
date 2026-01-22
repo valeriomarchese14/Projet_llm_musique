@@ -28,7 +28,7 @@ for nom_fichier in tqdm(fichiers_midi, desc="Tokenisation"):
             last_start = note.start 
 
             tokens.append(f"NOTE_ON_{note.pitch}")
-            tokens.append(f"DURATION_{note.end - note.start}\n")
+            tokens.append(f"DURATION/10_{(note.end - note.start)//10}\n")
             
 
         nom_sortie = os.path.splitext(nom_fichier)[0] + ".txt"
