@@ -2,34 +2,39 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 
-# --- 1. Tokenizer pour la Musique ---
+#Tokenizer pour la Musique
 class MusicTokenizer:
     def __init__(self, vocab):
+        # On ajoute des tokens spéciaux pour la structure quand on connait pas
         self.str_to_int = vocab
-        self.int_to_str = {i: s for s, i in vocab.items()}
-        self.vocab_size = len(vocab)
+        if "<|unk|>" not in self.str_to_int:
+            self.str_to_int["<|unk|>"] = len(self.str_to_int)
+        if "<|endoftext|>" not in self.str_to_int:
+            self.str_to_int["<|endoftext|>"] = len(self.str_to_int)
+            
+        self.int_to_str = {i: s for s, i in self.str_to_int.items()}
 
-    def encode(self, tokens_list):
-        # Convertit une liste de mots ["NOTE_ON_60", "DURATION_120"] en IDs [14, 52]
-        return [self.str_to_int[t] for t in tokens_list if t in self.str_to_int]
+    def encode(self, event_list):
+        #event_list est une liste de chaînes
+        return [self.str_to_int.get(e, self.str_to_int["<|unk|>"]) for e in event_list]
 
     def decode(self, ids):
-        # Convertit les IDs en mots pour ton script MIDI
-        return [self.int_to_str[i] for i in ids]
+        return [self.int_to_str.get(i, "<|unk|>") for i in ids]
 
-# --- 2. Dataset pour les séquences de tokens ---
+#Dataset pour les séquences de tokens
 class MusicDataset(Dataset):
-    def __init__(self, token_list, tokenizer, max_length, stride):
+    def __init__(self, all_tokens, tokenizer, max_length, stride):
         self.input_ids = []
         self.target_ids = []
 
-        token_ids = tokenizer.encode(token_list)
+        #Encodage de la liste de tokens musicaux
+        token_ids = tokenizer.encode(all_tokens)
 
         for i in range(0, len(token_ids) - max_length, stride):
             input_chunk = token_ids[i:i+max_length]
             target_chunk = token_ids[i+1:i+max_length+1]
-            self.input_ids.append(torch.tensor(input_chunk))
-            self.target_ids.append(torch.tensor(target_chunk))
+            self.input_ids.append(torch.tensor(input_chunk, dtype=torch.long))
+            self.target_ids.append(torch.tensor(target_chunk, dtype=torch.long))
         
     def __getitem__(self, idx):
         return self.input_ids[idx], self.target_ids[idx]
@@ -37,7 +42,7 @@ class MusicDataset(Dataset):
     def __len__(self):
         return len(self.input_ids)
 
-# --- 3. Composants du Modèle GPT ---
+#Composants du Modèle GPT
 class FeedForward(nn.Module):
     def __init__(self, cfg):
         super().__init__()
@@ -84,7 +89,7 @@ class TransformerBlock(nn.Module):
         self.norm2 = nn.LayerNorm(cfg["emb_dim"])
         self.drop = nn.Dropout(cfg["drop_rate"])
 
-    def forward(self, x):
+    def forward(self, x):           
         x = x + self.drop(self.att(self.norm1(x)))
         x = x + self.drop(self.ff(self.norm2(x)))
         return x
@@ -104,4 +109,7 @@ class GPTMusicModel(nn.Module):
         x = self.tok_emb(in_idx) + self.pos_emb(torch.arange(seq_len, device=in_idx.device))
         x = self.trf_blocks(self.drop_emb(x))
         return self.out_head(self.final_norm(x))
+
+
+
 
