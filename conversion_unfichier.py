@@ -1,0 +1,54 @@
+import miditoolkit
+import os
+from tqdm import tqdm
+
+dossier_entree = "Projet_llm_musique/GrandMidiPiano/test"
+dossier_sortie = "Projet_llm_musique/dataset_tokens2"
+
+os.makedirs(dossier_sortie, exist_ok=True)
+fichiers_midi = [f for f in os.listdir(dossier_entree) if f.endswith(('.mid', '.midi'))]
+
+
+for nom_fichier in tqdm(fichiers_midi, desc="Tokenisation"):
+    chemin_complet = os.path.join(dossier_entree, nom_fichier)
+    try:
+        midi = miditoolkit.MidiFile(chemin_complet)
+        
+        toutes_les_notes = []
+        for inst in midi.instruments:
+            toutes_les_notes.extend(inst.notes)
+            
+        toutes_les_notes.sort(key=lambda x: (x.start, x.pitch))
+        #x.pitch permet de les trier de la meme facon a chaque fois selon la hauteur 
+        
+        tokens = []
+        last_start = 0  
+
+        for note in toutes_les_notes:
+            #Temps écoulé depuis la note précédente, on ajoute que si différent de zéro 
+            #on coupe de la meme facon que la durée
+            delta = (note.start - last_start) // 10
+            if delta > 0:
+                tokens.append(f"TIME_SHIFT_{delta}")
+            
+            last_start = note.start 
+
+            #Note
+            tokens.append(f"NOTE_ON_{note.pitch}")
+            
+            #Durée /10
+            dur = (note.end - note.start) // 10
+            tokens.append(f"DURATION/10_{dur}")
+
+        #ajout token de fin
+        tokens.append("<|endoftext|>")
+
+        nom_sortie = os.path.splitext(nom_fichier)[0] + ".txt"
+        chemin_sortie = os.path.join(dossier_sortie, nom_sortie)
+        
+        #on joint avec un espace simple
+        with open(chemin_sortie, "w", encoding="utf-8") as f:
+            f.write(" ".join(tokens))
+            
+    except Exception as e:
+        print(f"Erreur sur le fichier {nom_fichier}: {e}")
