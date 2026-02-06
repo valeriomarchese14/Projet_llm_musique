@@ -2,14 +2,14 @@ import miditoolkit
 import os
 from tqdm import tqdm
 
-dossier_entree = "Projet_llm_musique/GrandMidiPiano/test"
+dossier_entree = "Projet_llm_musique/GrandMidiPiano"
 dossier_sortie = "Projet_llm_musique/dataset_tokens2"
 
 os.makedirs(dossier_sortie, exist_ok=True)
 fichiers_midi = [f for f in os.listdir(dossier_entree) if f.endswith(('.mid', '.midi'))]
 
 
-for nom_fichier in tqdm(fichiers_midi, desc="Tokenisation"):
+for nom_fichier in tqdm(fichiers_midi, desc="Tokenisation", miniters=100, mininterval=0):
     chemin_complet = os.path.join(dossier_entree, nom_fichier)
     try:
         midi = miditoolkit.MidiFile(chemin_complet)
