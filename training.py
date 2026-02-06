@@ -13,7 +13,7 @@ dossier_tokens = "Projet_llm_musique/dataset_tokens2"
 fichiers = [f for f in os.listdir(dossier_tokens) if f.endswith('.txt')]
 all_music_tokens = []
 
-print(f"Chargement de {len(fichiers)} fichiers pour le vocabulaire...")
+print(f"Chargement de {len(fichiers)} fichiers pour le vocabulaire")
 for fn in fichiers:
     chemin = os.path.join(dossier_tokens, fn)
     with open(chemin, "r", encoding="utf-8") as f:
@@ -93,4 +93,5 @@ def train_model_simple(model, train_loader, optimizer, device, num_epochs):
     print("Entraînement terminé et modèle sauvegardé !")
 
 #Lancement
-train_model_simple(model, train_loader, optimizer, device, num_epochs=50)
+train_model_simple(model, train_loader, optimizer, device, num_epochs=1)
+
